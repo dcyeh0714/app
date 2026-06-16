@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中世紀人生 - 文字冒險遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans CJK TC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(to bottom, rgba(120, 53, 15, 0.8), rgba(120, 53, 15, 0.6), rgba(0, 0, 0, 1));
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(217, 119, 6, 0.03) 2px,
+                    rgba(217, 119, 6, 0.03) 4px
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(217, 119, 6, 0.03) 2px,
+                    rgba(217, 119, 6, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(217, 119, 6, 0.5);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8);
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #fcd34d;
+            text-align: center;
+            margin-bottom: 12px;
+            font-family: Georgia, serif;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(254, 243, 199, 0.8);
+            font-style: italic;
+            font-family: Georgia, serif;
+            margin-bottom: 24px;
+        }
+
+        .intro-text {
+            color: #fef3c7;
+            line-height: 1.8;
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .hint-text {
+            color: rgba(217, 119, 6, 0.7);
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            color: #fbbf24;
+            text-align: center;
+            margin-bottom: 16px;
+            font-family: Georgia, serif;
+            font-size: 18px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .button-group.full {
+            grid-template-columns: 1fr;
+        }
+
+        button {
+            background: linear-gradient(to bottom, rgba(217, 119, 6, 0.4), rgba(120, 53, 15, 0.6));
+            border: 2px solid rgba(217, 119, 6, 0.6);
+            color: #fef3c7;
+            padding: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: linear-gradient(to bottom, rgba(217, 119, 6, 0.6), rgba(120, 53, 15, 0.8));
+            border-color: #fbbf24;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.2);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .back-button {
+            background: transparent;
+            border: 1px solid rgba(217, 119, 6, 0.6);
+            color: rgba(217, 119, 6, 0.7);
+            padding: 8px 12px;
+            font-size: 12px;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        .back-button:hover {
+            color: #fbbf24;
+            border-color: #fbbf24;
+            background: transparent;
+        }
+
+        .story-title {
+            font-size: 24px;
+            color: #fef3c7;
+            font-family: Georgia, serif;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .story-time {
+            color: rgba(217, 119, 6, 0.7);
+            font-size: 12px;
+            border-left: 2px solid rgba(217, 119, 6, 0.6);
+            padding-left: 12px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .story-dilemma {
+            color: #fef3c7;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .choice-button {
+            width: 100%;
+            text-align: left;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: linear-gradient(to bottom, rgba(217, 119, 6, 0.3), rgba(120, 53, 15, 0.5));
+            border: 2px solid rgba(217, 119, 6, 0.7);
+            white-space: normal;
+            line-height: 1.5;
+        }
+
+        .ending-container {
+            text-align: center;
+        }
+
+        .ending-title {
+            font-size: 28px;
+            color: #fef3c7;
+            font-family: Georgia, serif;
+            margin: 16px 0;
+            font-weight: bold;
+        }
+
+        .ending-tone {
+            font-size: 16px;
+            font-style: italic;
+            margin-bottom: 16px;
+            font-family: Georgia, serif;
+        }
+
+        .tone-tragedy {
+            color: #fca5a5;
+        }
+
+        .tone-heroic {
+            color: #fbbf24;
+        }
+
+        .tone-hope {
+            color: #86efac;
+        }
+
+        .tone-resilient {
+            color: #fcd34d;
+        }
+
+        .tone-deep {
+            color: #93c5fd;
+        }
+
+        .tone-pioneer {
+            color: #c4b5fd;
+        }
+
+        .tone-breakthrough {
+            color: #f472b6;
+        }
+
+        .tone-culture {
+            color: #67e8f9;
+        }
+
+        .tone-retired {
+            color: rgba(254, 243, 199, 0.6);
+        }
+
+        .tone-defense {
+            color: #fcd34d;
+        }
+
+        .tone-freedom {
+            color: #bef264;
+        }
+
+        .ending-outcome {
+            color: #fbbf24;
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+
+        .ending-description {
+            color: #fef3c7;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            font-size: 13px;
+            padding: 16px 0;
+            border-top: 1px solid rgba(217, 119, 6, 0.5);
+            border-bottom: 1px solid rgba(217, 119, 6, 0.5);
+        }
+
+        .restart-button {
+            background: linear-gradient(to right, rgba(217, 119, 6, 0.5), rgba(120, 53, 15, 0.6));
+            border: 2px solid #fbbf24;
+            color: #fef3c7;
+            font-weight: bold;
+            padding: 16px 24px;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        .restart-button:hover {
+            background: linear-gradient(to right, rgba(217, 119, 6, 0.6), rgba(120, 53, 15, 0.8));
+            box-shadow: 0 0 16px rgba(251, 191, 36, 0.3);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            color: rgba(217, 119, 6, 0.4);
+            font-size: 12px;
+        }
+
+        .decorative {
+            text-align: center;
+            letter-spacing: 8px;
+            color: rgba(217, 119, 6, 0.3);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card" id="gameContainer">
+            <!-- 遊戲內容會動態插入這裡 -->
+        </div>
+        <div class="footer">
+            <div class="decorative">※ ※ ※</div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲數據
+        const gameData = {
+            stories: {
+                male_commoner: {
+                    title: '平民男孩',
+                    time: '1347年 黑死病與飢荒',
+                    dilemma: '災荒與瘟疫奪走了村裡大半人口，領主卻派武裝侍從強行收走最後的口糧當作「盾牌稅」。',
+                    choices: [
+                        { label: '選擇 A：隱忍交糧，加入宗教遊行', ending: 'male_commoner_a' },
+                        { label: '選擇 B：拒絕交糧，率眾反抗', ending: 'male_commoner_b' }
+                    ]
+                },
+                female_commoner: {
+                    title: '平民女孩',
+                    time: '1347年 黑死病與飢荒',
+                    dilemma: '父母在瘟疫中雙亡，根據封建法律，你若想繼承家裡的租地，必須向領主繳納高昂的「單身稅/繼承稅」。',
+                    choices: [
+                        { label: '選擇 A：無力繳稅，逃往城市', ending: 'female_commoner_a' },
+                        { label: '選擇 B：留在村裡向神父求助', ending: 'female_commoner_b' }
+                    ]
+                },
+                male_citizen: {
+                    title: '市民男子',
+                    time: '1453年 君士坦丁堡陷落',
+                    dilemma: '奧斯曼土耳其攻陷了君士坦丁堡，傳統絲綢之路被切斷，香料價格暴漲。同時，古騰堡剛完善了活字印刷術。',
+                    choices: [
+                        { label: '選擇 A：投資活字印刷作坊', ending: 'male_citizen_a' },
+                        { label: '選擇 B：出資加入遠洋商隊', ending: 'male_citizen_b' }
+                    ]
+                },
+                female_citizen: {
+                    title: '市民女性',
+                    time: '1453年 君士坦丁堡陷落',
+                    dilemma: '你的富商丈夫在貿易途中過世。行會長老們欺負你是寡婦，試圖強行收回你家的呢絨商號與財產。',
+                    choices: [
+                        { label: '選擇 A：上訴城市議會，捍衛財產權', ending: 'female_citizen_a' },
+                        { label: '選擇 B：贊助拜占庭學者', ending: 'female_citizen_b' }
+                    ]
+                },
+                male_noble: {
+                    title: '貴族騎士',
+                    time: '1415年 英法百年戰爭',
+                    dilemma: '國王發出最高徵召令，要求所有封建騎士自備盔甲馬匹，渡海前往法蘭西戰場與英軍決戰。',
+                    choices: [
+                        { label: '選擇 A：履行誓言，穿甲奔赴戰場', ending: 'male_noble_a' },
+                        { label: '選擇 B：繳納盾牌稅，留守領地', ending: 'male_noble_b' }
+                    ]
+                },
+                female_noble: {
+                    title: '貴族女性',
+                    time: '1415年 英法百年戰爭',
+                    dilemma: '為了家族政治利益，你的父親決定將你聯姻給一個年邁殘暴的邊境伯爵。',
+                    choices: [
+                        { label: '選擇 A：服從家族命令，完成聯姻', ending: 'female_noble_a' },
+                        { label: '選擇 B：宣稱聽到神聖召喚，入修道院', ending: 'female_noble_b' }
+                    ]
+                }
+            },
+            endings: {
+                male_commoner_a: {
+                    title: '鞭笞者的絕望',
+                    outcome: '【歷史事件 - 鞭笞者運動與心靈絕望】',
+                    description: '你加入了四處流浪的「鞭笞者」隊伍，用皮鞭抽打自己以求上帝寬恕。然而，瘋狂的集會加速了鼠疫傳播，你在極度虛弱與絕望中染病死去。這場盲目的虔誠，最終動搖了整個歐洲對天主教會的絕對信仰。',
+                    tone: 'tragedy'
+                },
+                male_commoner_b: {
+                    title: '瓦特·泰勒的火焰',
+                    outcome: '【歷史事件 - 1381年瓦特·泰勒農民起義】',
+                    description: '你加入了席捲全國的農民反抗軍。雖然起義最終被國王殘酷鎮壓，你也在倫敦橋下戰死，但這場烈火迫使領主們不敢再任意奴役農民，歷史上西歐的農奴制自此加速走向瓦解。',
+                    tone: 'heroic'
+                },
+                female_commoner_a: {
+                    title: '城市自由之夢',
+                    outcome: '【微觀歷史 - 城市自由與「一年零一天」法則】',
+                    description: '你成功躲進了城市的紡織作坊做苦工。根據中世紀法律「城市的空氣帶來自由」，只要農奴在城市裡成功躲滿「一年零一天」，原領主就再也無權抓你。你雖然貧困，但你用微觀的抗爭為自己贏得了「自由民」的身份。',
+                    tone: 'hope'
+                },
+                female_commoner_b: {
+                    title: '廢墟中的收穫',
+                    outcome: '【微觀歷史 - 黑死病過後農村女性的短暫黃金期】',
+                    description: '神父幫你向領主說情。由於黑死病導致農村勞動力極度短缺，領主不得不妥協，甚至破天荒允許你以女性身份獨立承包耕地、領取高額工資。你在這場世紀大災難的廢墟中，意外靠著雙手撐起了自己的莊園生活。',
+                    tone: 'resilient'
+                },
+                male_citizen_a: {
+                    title: '宗教改革的幕後推手',
+                    outcome: '【歷史事件 - 1517年宗教改革的幕後推手】',
+                    description: '你的印刷廠生意興隆，書籍成本暴跌。幾十年後，一位叫馬丁·路德的修士寫下了《九十五條論綱》，透過你的印刷機，這些思想在短短兩週內傳遍全歐洲，你用商業科技無意間點燃了宗教改革的烈火。',
+                    tone: 'deep'
+                },
+                male_citizen_b: {
+                    title: '大航海時代的黎明',
+                    outcome: '【歷史事件 - 大航海時代的黎明】',
+                    description: '地中海貿易沒落了，但你的商船隊毅然轉向大西洋。幾十年後，這股尋找東方新航線的市民資本，直接催生了哥倫布與達伽馬的遠航，人類歷史正式跨入大航海時代。',
+                    tone: 'pioneer'
+                },
+                female_citizen_a: {
+                    title: '獨立女性行會大師',
+                    outcome: '【微觀歷史 - 獨立女性行會大師（Master）】',
+                    description: '你勝訴了！你在商場上展現了驚人的手腕，成為城市裡極少數能獨立經營大商號、甚至在行會裡擁有投票權的女性。這段微觀歷史證實了在中世紀晚期的城市中，高階女性已經能利用經濟實力打破性別天花板。',
+                    tone: 'breakthrough'
+                },
+                female_citizen_b: {
+                    title: '文藝復興的女性庇護者',
+                    outcome: '【歷史事件 - 義大利文藝復興的女性庇護者】',
+                    description: '你將商號改為沙龍，庇護了大量帶著古籍逃難的學者。在你們這些富裕市民的資金贊助下，失落千年的希臘羅馬古典文化在義大利半島重新復活，你成為點燃文藝復興人文主義光芒的幕後功臣。',
+                    tone: 'culture'
+                },
+                male_noble_a: {
+                    title: '阿金庫爾的悲劇',
+                    outcome: '【歷史事件 - 阿金庫爾戰役與騎士階級的沒落】',
+                    description: '你來到了1415年的阿金庫爾戰役。在暴雨後的泥濘中，你和法國重裝騎士們發動衝鋒，卻遭到英國長弓兵遮天蔽日的箭雨射擊。重甲讓你深陷泥濘無法動彈，最終被輕裝的英國農民步兵用匕首刺穿。這場戰役標誌著傳統騎士階級的軍事沒落。',
+                    tone: 'tragedy'
+                },
+                male_noble_b: {
+                    title: '鄉紳的晚年',
+                    outcome: '【微觀歷史 - 地方鄉紳與封建領地的莊園晚年】',
+                    description: '你避開了慘烈的戰火，在自己的領地上安穩地經營莊園、收取地租。你見證了國王開始僱用專業的常備解僱兵、以及早期火器的出現。你雖然失去了戰場的榮譽，卻以一個富裕地方鄉紳的身份，在城堡裡安享晚年。',
+                    tone: 'retired'
+                },
+                female_noble_a: {
+                    title: '城堡女主人的堅守',
+                    outcome: '【微觀歷史 - 城堡女主人與戰時指揮官】',
+                    description: '幾年後，你的丈夫在百年戰爭中戰死。當敵對領主的軍隊前來圍攻城堡時，你展現了貴族女性的堅韌，親自穿上軟甲、登上城牆指揮留守的民兵與弓箭手，成功死守城堡。你用行動證明了貴族女性絕非花瓶，而是城堡真正的守護者。',
+                    tone: 'defense'
+                },
+                female_noble_b: {
+                    title: '修道院中的知識女性',
+                    outcome: '【微觀歷史 - 修道院中的高階知識女性】',
+                    description: '你逃離了世俗的政治包辦婚姻。在修道院的高牆內，你避開了生育的鬼門關，學會了拉丁文、哲學與草藥醫學。你最終成為受人尊敬的修道院長，撰寫了許多神學與音樂著作。在那個女性被剝奪受教權的時代，修道院反成了你實踐知識與精神自由的唯一聖所。',
+                    tone: 'freedom'
+                }
+            }
+        };
+
+        // 遊戲狀態
+        let gameState = {
+            currentScreen: 'start',
+            selectedGender: null,
+            selectedClass: null,
+            currentStory: null,
+            ending: null
+        };
+
+        // 渲染函數
+        function renderStart() {
+            return `
+                <h1>中世紀人生</h1>
+                <p class="subtitle">一千年前的選擇，改變了歷史</p>
+                
+                <p class="intro-text">你即將踏入1300-1450年間的歐洲。在瘟疫、戰爭與變革的時代，每一個選擇都可能改寫你的人生軌跡，甚至改變歷史的進程。</p>
+                <p class="hint-text">選擇你的身份，開啟屬於你的時代傳奇</p>
+                
+                <p class="section-title">選擇你的性別</p>
+                <div class="button-group">
+                    <button onclick="selectGender('male')">
+                        👨<br/>
+                        <strong>男性</strong><br/>
+                        <small style="color: rgba(217, 119, 6, 0.7);">騎士、商人、農民</small>
+                    </button>
+                    <button onclick="selectGender('female')">
+                        👩<br/>
+                        <strong>女性</strong><br/>
+                        <small style="color: rgba(217, 119, 6, 0.7);">商人、貴婦、修女</small>
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderClass() {
+            return `
+                <button class="back-button" onclick="goBack('start')">← 返回</button>
+                
+                <p class="section-title">選擇你的社會身份</p>
+                <p class="hint-text">在中世紀，身份決定了你的命運</p>
+                
+                <button class="choice-button" onclick="selectClass('commoner')">
+                    🌾 <strong>平民</strong><br/>
+                    <small>農民、手工業者</small>
+                </button>
+                <button class="choice-button" onclick="selectClass('citizen')">
+                    🪙 <strong>市民</strong><br/>
+                    <small>商人、行會成員</small>
+                </button>
+                <button class="choice-button" onclick="selectClass('noble')">
+                    ⚔️ <strong>貴族</strong><br/>
+                    <small>騎士、領主</small>
+                </button>
+            `;
+        }
+
+        function renderStory() {
+            const story = gameData.stories[gameState.currentStory];
+            let html = `
+                <button class="back-button" onclick="goBack('class')">← 返回選擇</button>
+                
+                <p class="story-title">${story.title}</p>
+                <span class="story-time">⏰ ${story.time}</span>
+                <p class="story-dilemma">${story.dilemma}</p>
+                
+                <p class="section-title">你的選擇：</p>
+            `;
+            
+            story.choices.forEach(choice => {
+                html += `<button class="choice-button" onclick="chooseEnding('${choice.ending}')">${choice.label}</button>`;
+            });
+            
+            return html;
+        }
+
+        function renderEnding() {
+            const ending = gameData.endings[gameState.ending];
+            const toneClass = `tone-${ending.tone}`;
+            
+            return `
+                <div class="ending-container">
+                    <p style="color: rgba(217, 119, 6, 0.7); font-size: 12px; margin-bottom: 12px;">你的結局</p>
+                    <h1 style="font-size: 24px; margin-bottom: 8px;">${ending.title}</h1>
+                    <p class="ending-tone ${toneClass}">— ${getToneName(ending.tone)} —</p>
+                </div>
+                
+                <p class="ending-outcome">${ending.outcome}</p>
+                <p class="ending-description">${ending.description}</p>
+                
+                <button class="restart-button" onclick="restart()">⟲ 開啟新的人生</button>
+                
+                <p style="color: rgba(217, 119, 6, 0.5); font-size: 11px; text-align: center; margin-top: 16px;">你的選擇已被歷史記錄。下一次，或許你會改寫另一段傳奇。</p>
+            `;
+        }
+
+        function getToneName(tone) {
+            const tones = {
+                'tragedy': '悲劇',
+                'heroic': '壯烈',
+                'hope': '希望',
+                'resilient': '堅韌',
+                'deep': '影響深遠',
+                'pioneer': '開創',
+                'breakthrough': '突破',
+                'culture': '文化復興',
+                'retired': '隱退',
+                'defense': '堅守',
+                'freedom': '自由'
+            };
+            return tones[tone] || tone;
+        }
+
+        // 操作函數
+        function selectGender(gender) {
+            gameState.selectedGender = gender;
+            gameState.currentScreen = 'class';
+            render();
+        }
+
+        function selectClass(socialClass) {
+            gameState.selectedClass = socialClass;
+            gameState.currentStory = `${gameState.selectedGender}_${socialClass}`;
+            gameState.currentScreen = 'story';
+            render();
+        }
+
+        function chooseEnding(ending) {
+            gameState.ending = ending;
+            gameState.currentScreen = 'ending';
+            render();
+        }
+
+        function goBack(screen) {
+            gameState.currentScreen = screen;
+            if (screen === 'start') {
+                gameState.selectedGender = null;
+                gameState.selectedClass = null;
+            }
+            render();
+        }
+
+        function restart() {
+            gameState = {
+                currentScreen: 'start',
+                selectedGender: null,
+                selectedClass: null,
+                currentStory: null,
+                ending: null
+            };
+            render();
+        }
+
+        function render() {
+            const container = document.getElementById('gameContainer');
+            let content = '';
+            
+            switch(gameState.currentScreen) {
+                case 'start':
+                    content = renderStart();
+                    break;
+                case 'class':
+                    content = renderClass();
+                    break;
+                case 'story':
+                    content = renderStory();
+                    break;
+                case 'ending':
+                    content = renderEnding();
+                    break;
+            }
+            
+            container.innerHTML = content;
+        }
+
+        // 初始化
+        render();
+    </script>
+</body>
+</html>
